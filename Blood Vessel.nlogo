@@ -1,6 +1,9 @@
 globals [
   sample-car
+  clock
 ]
+breed [plaques plaque]
+breed [cells cell]
 
 turtles-own [
   speed
@@ -12,15 +15,24 @@ to setup
   clear-all
   ask patches [ setup-vessel ]
   setup-cars
-  watch sample-car
+  setup-plaque
   reset-ticks
 end
 
 to setup-vessel ;; patch procedure
   if pycor < 2.5 and pycor > -2.5 [ set pcolor red ]
-  if pycor < -2.5 and pycor > 2.5 [ set pcolor yellow ]
-
+  if pycor < -2.5 or pycor > 2.5 [ set pcolor yellow ]
 end
+
+to setup-plaque
+  set-default-shape cells "square"
+  create-plaques 1 [
+    set color yellow
+    set xcor 0
+    set ycor -2.5
+  ]
+end
+
 
 to setup-cars
   if number-of-cars > world-width [
@@ -31,8 +43,8 @@ to setup-cars
       "The setup has stopped.")
     stop
   ]
-  set-default-shape turtles "circle"
-  create-turtles number-of-cars [
+  set-default-shape cells "circle"
+  create-cells number-of-cars [
     set color red - 2
     set xcor -25
     set ycor -2.5 + random-float 5
@@ -43,14 +55,15 @@ to setup-cars
     set speed-min 0
     separate-cars
   ]
-  set sample-car one-of turtles
+  set sample-car one-of cells
   ask sample-car [ set color blue]
 end
+
 
 ; this procedure is needed so when we click "Setup" we
 ; don't end up with any two cars on the same patch
 to separate-cars ;; turtle procedure
-  if any? other turtles-here [
+  if any? other cells-here [
     fd 1
     separate-cars
   ]
@@ -58,7 +71,7 @@ end
 
 to go
   ;; if there is a car right ahead of you, match its speed then slow down
-  ask turtles [
+  ask cells [
     let car-ahead one-of turtles-on patch-ahead 1
     ifelse car-ahead != nobody
       [ slow-down-car car-ahead ]
@@ -68,8 +81,16 @@ to go
     if speed > speed-limit [ set speed speed-limit ]
     fd speed
   ]
+  set clock clock + 1
+  if clock mod 10 = 0 [form-plaque]
   tick
 end
+
+to form-plaque
+    ask plaques [hatch 1 [right random 360 fd 1]]
+end
+
+
 
 to slow-down-car [ car-ahead ] ;; turtle procedure
   ;; slow down so you are driving more slowly than the car ahead of you
