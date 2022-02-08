@@ -76,7 +76,9 @@ to go
       [ slow-down-car car-ahead ]
       [ speed-up-car ] ;; otherwise, speed up
     ifelse plaque-ahead != nobody
-      [  set heading heading - 10 ]
+      [  set heading heading - 10
+         set speed speed - .1
+      ]
       [ speed-up-car
       set heading 90
       ] ;; otherwise, speed up
