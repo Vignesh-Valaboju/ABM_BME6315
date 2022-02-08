@@ -20,8 +20,8 @@ to setup
 end
 
 to setup-vessel ;; patch procedure
-  if pycor < 2.5 and pycor > -2.5 [ set pcolor red ]
-  if pycor < -2.5 or pycor > 2.5 [ set pcolor black ]
+  set pcolor red
+  ;;if pycor < -2.5 or pycor > 2.5 [ set pcolor black ]
 end
 
 to setup-plaque
@@ -29,7 +29,7 @@ to setup-plaque
   create-plaques 1 [
     set color yellow
     set xcor 0
-    set ycor -2.5
+    set ycor -5
   ]
 end
 
@@ -47,7 +47,7 @@ to setup-cars
   create-cells number-of-cars [
     set color red - 2
     set xcor -25
-    set ycor -2.5 + random-float 5
+    set ycor -2.5 + random-float 10
     set heading 90
     ;; set initial speed to be in range 0.1 to 1.0
     set speed 0 + random-float 1.0
@@ -72,37 +72,33 @@ to go
   ask cells [
     let car-ahead one-of cells-on patch-ahead 1
     let plaque-ahead one-of plaques-on patch-ahead 1
+
     ifelse car-ahead != nobody
       [ slow-down-car car-ahead ]
       [ speed-up-car ] ;; otherwise, speed up
+
     ifelse plaque-ahead != nobody
-      [
-        ifelse ycor >= 0
-        [set heading heading + 10
-          set speed speed - .1
+        [ set speed 0
+          set heading heading - 90
         ]
-        [set heading heading - 10
-          set speed speed - .1]
-      ]
-      [ speed-up-car
-      set heading 90
-      ] ;; otherwise, speed up
+        [ speed-up-car
+          set heading 90
+        ] ;; otherwise, speed up
+
     ifelse car-ahead != nobody
       [ slow-down-car car-ahead ]
       [ speed-up-car ] ;; otherwise, speed up
+
     ;; don't slow down below speed minimum or speed up beyond speed limit
-    if speed < speed-min [ set speed speed-min ]
     if speed > speed-limit [ set speed speed-limit ]
-    fd speed
-    if ycor <= -2.5
-    [ set heading heading - 90
-    ]
-    if ycor >= 2.5
-    [ set heading heading + 90
-    ]
+    fd 1
+
+    avoid-walls
+
+
   ]
   set clock clock + 1
-  if clock mod 30 = 0 [form-plaque]
+  if clock mod 60 = 0 [form-plaque]
   tick
 end
 
@@ -114,7 +110,7 @@ end
 
 to slow-down-car [ car-ahead ] ;; turtle procedure
   ;; slow down so you are driving more slowly than the car ahead of you
-  set speed [ speed ] of car-ahead - deceleration
+  set speed ([ speed ] of car-ahead)
 end
 
 
@@ -122,16 +118,19 @@ to speed-up-car ;; turtle procedure
   set speed speed + acceleration
 end
 
-
+to avoid-walls ;; turtle procedure
+  if not can-move? 1
+  [ rt 180 ]
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 244
 10
-681
-448
+1462
+129
 -1
 -1
-13.0
+10.0
 1
 10
 1
@@ -141,15 +140,15 @@ GRAPHICS-WINDOW
 1
 1
 1
--16
-16
--16
-16
+-60
+60
+-5
+5
 1
 1
 1
 ticks
-30.0
+100.0
 
 SLIDER
 25
@@ -224,7 +223,7 @@ acceleration
 acceleration
 0
 100
-54.0
+8.0
 1
 1
 NIL
