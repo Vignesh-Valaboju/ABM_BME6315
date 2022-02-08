@@ -1,6 +1,7 @@
 globals [
   sample-car
   clock
+  clotting-prob
 ]
 breed [plaques plaque]
 breed [cells cell]
@@ -13,41 +14,43 @@ turtles-own [
 
 to setup
   clear-all
-  ask patches [ setup-vessel ]
+  ;;ask patches [ setup-vessel ]
   setup-cars
-  setup-plaque
+  setup-plaque-top
+  setup-plaque-bot
   reset-ticks
 end
 
-to setup-vessel ;; patch procedure
-  if pycor < 2.5 and pycor > -2.5 [ set pcolor red ]
-  if pycor < -2.5 or pycor > 2.5 [ set pcolor black ]
-end
+;;to setup-vessel ;; patch procedure
+  ;;if pycor < 2.5 and pycor > -2.5 [ set pcolor red ]
+  ;;if pycor < -2.5 or pycor > 2.5 [ set pcolor black ]
+;;end
 
-to setup-plaque
+to setup-plaque-top
   set-default-shape cells "square"
   create-plaques 1 [
     set color yellow
     set xcor 0
-    set ycor -2.5
+    set ycor 5
   ]
 end
 
+to setup-plaque-bot
+  set-default-shape cells "square"
+  create-plaques 1 [
+    set color yellow
+    set xcor 0
+    set ycor -5
+  ]
+end
 
 to setup-cars
-  if number-of-cars > world-width [
-    user-message (word
-      "There are too many cars for the amount of road. "
-      "Please decrease the NUMBER-OF-CARS slider to below "
-      (world-width + 1) " and press the SETUP button again. "
-      "The setup has stopped.")
-    stop
-  ]
+
   set-default-shape cells "circle"
-  create-cells number-of-cars [
+  create-cells number-of-cells [
     set color red - 2
-    set xcor -25
-    set ycor -2.5 + random-float 5
+    set xcor -70
+    set ycor -5 + random-float 10
     set heading 90
     ;; set initial speed to be in range 0.1 to 1.0
     set speed 0 + random-float 1.0
@@ -72,22 +75,24 @@ to go
   ask cells [
     let car-ahead one-of cells-on patch-ahead 1
     let plaque-ahead one-of plaques-on patch-ahead 1
+
     ifelse car-ahead != nobody
       [ slow-down-car car-ahead ]
       [ speed-up-car ] ;; otherwise, speed up
+
     ifelse plaque-ahead != nobody
       [
         ifelse ycor >= 0
-        [set heading heading + 10
+        [set heading heading + 45
           set speed speed - .1
         ]
-        [set heading heading - 10
+        [set heading heading - 45
           set speed speed - .1]
-        set Clotting_Prob ( (Clotting_Prob + 0.05) * ( round ((random 500) * 0.0001 ) ) )
       ]
       [ speed-up-car
       set heading 90
       ] ;; otherwise, speed up
+
     ifelse car-ahead != nobody
       [ slow-down-car car-ahead ]
       [ speed-up-car ] ;; otherwise, speed up
@@ -96,9 +101,29 @@ to go
     if speed > speed-limit [ set speed speed-limit ]
 
     fd speed
+
+    avoid-walls
   ]
   set clock clock + 1
-  if clock mod 30 = 0 [form-plaque]
+  if (clotting-prob < 0.1) and (clotting-prob > 0) [ if clock mod 300 = 0 [form-plaque] ]
+  if (clotting-prob < 0.2) and (clotting-prob > 0.1) [ if clock mod 280 = 0 [form-plaque] ]
+  if (clotting-prob < 0.3) and (clotting-prob > 0.2) [ if clock mod 270 = 0 [form-plaque] ]
+  if (clotting-prob < 0.4) and (clotting-prob > 0.3) [ if clock mod 250 = 0 [form-plaque] ]
+  if (clotting-prob < 0.5) and (clotting-prob > 0.4) [ if clock mod 210 = 0 [form-plaque] ]
+  if (clotting-prob < 0.6) and (clotting-prob > 0.5) [ if clock mod 170 = 0 [form-plaque] ]
+  if (clotting-prob < 0.7) and (clotting-prob > 0.6) [ if clock mod 130 = 0 [form-plaque] ]
+  if (clotting-prob < 0.8) and (clotting-prob > 0.7) [ if clock mod 95 = 0 [form-plaque] ]
+  if (clotting-prob < 0.9) and (clotting-prob > 0.8) [ if clock mod 40 = 0 [form-plaque] ]
+  if (clotting-prob > 0.9) [ if clock mod 30 = 0 [form-plaque] ]
+  ;;if clock mod 300 = 0 [form-plaque]
+  if (mean [speed] of turtles < 0.2) and (mean [speed] of turtles > 0) [set clotting-prob clotting-prob + 0.001 * (random 100) / 10]
+  if (mean [speed] of turtles < 0.4) and (mean [speed] of turtles > 0.2) [set clotting-prob clotting-prob + 0.001 * (random 100) / 200]
+  if (mean [speed] of turtles < 0.6) and (mean [speed] of turtles > 0.4) [set clotting-prob clotting-prob + 0.001 * (random 100) / 1000]
+  if (mean [speed] of turtles < 0.8) and (mean [speed] of turtles > 0.6) [set clotting-prob clotting-prob + 0.001 * (random 100) / 2000]
+  if (mean [speed] of turtles < 0.9) and (mean [speed] of turtles > 0.8) [set clotting-prob clotting-prob + 0.001 * (random 100) / 3000]
+
+  if (mean [speed] of turtles <= 0.01) [stop]
+  if (clotting-prob > 1) [stop]
   tick
 end
 
@@ -117,15 +142,24 @@ to speed-up-car ;; turtle procedure
   set speed speed + acceleration
 end
 
+to avoid-walls ;; turtle procedure
+  if not can-move? 1
+  [ rt 180 ]
+end
+
+to-report plaque_tot
+  report patches with [pcolor = yellow]
+end
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 14
 251
-685
-377
+1232
+370
 -1
 -1
-13.0
+10.0
 1
 10
 1
@@ -135,15 +169,15 @@ GRAPHICS-WINDOW
 1
 0
 1
--25
-25
--4
-4
+-60
+60
+-5
+5
 1
 1
 1
 ticks
-30.0
+100.0
 
 BUTTON
 36
@@ -184,41 +218,41 @@ SLIDER
 34
 216
 67
-number-of-cars
-number-of-cars
+number-of-cells
+number-of-cells
 1
-41
-41.0
+300
+100.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-121
-180
-266
-213
+40
+170
+185
+203
 deceleration
 deceleration
 0
 .099
-0.085
+0.022
 .001
 1
 NIL
 HORIZONTAL
 
 SLIDER
-121
-145
-266
-178
+40
+135
+185
+168
 acceleration
 acceleration
 0
 .0099
-0.0022
+0.0023
 .0001
 1
 NIL
@@ -240,35 +274,49 @@ true
 true
 "" ""
 PENS
-"red car" 1.0 0 -2674135 true "" "plot [speed] of sample-car"
-"min speed" 1.0 0 -13345367 true "" "plot min [speed] of turtles"
-"max speed" 1.0 0 -10899396 true "" "plot max [speed] of turtles"
+"min speed" 1.0 0 -5825686 true "" "plot min [speed] of turtles"
+"max speed" 1.0 0 -15302303 true "" "plot max [speed] of turtles"
+"mean speed" 1.0 0 -3844592 true "" "plot mean [speed] of turtles"
 
 MONITOR
-17
-145
-114
-190
-red car speed
-ifelse-value any? turtles\n  [   [speed] of sample-car  ]\n  [  0 ]
-3
+1090
+20
+1222
+65
+Clotting Probability
+clotting-prob
+5
 1
 11
 
-SLIDER
-770
-85
-942
-118
-Clotting_Prob
-Clotting_Prob
-0
-1
+PLOT
+715
+20
+1070
+215
+Amount of Plaque
+time
+Plaque-Totals
 0.0
-0.0001
+300.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"Amount of Plaque" 1.0 0 -16777216 true "" "plot count plaques"
+
+MONITOR
+1090
+70
+1225
+115
+Plaque Totals
+count plaques
+17
 1
-NIL
-HORIZONTAL
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
