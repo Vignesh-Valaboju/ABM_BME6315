@@ -76,8 +76,13 @@ to go
       [ slow-down-car car-ahead ]
       [ speed-up-car ] ;; otherwise, speed up
     ifelse plaque-ahead != nobody
-      [  set heading heading - 10
-         set speed speed - .1
+      [
+        ifelse ycor >= 0
+        [set heading heading + 10
+          set speed speed - .1
+        ]
+        [set heading heading - 10
+          set speed speed - .1]
       ]
       [ speed-up-car
       set heading 90
@@ -88,8 +93,13 @@ to go
     ;; don't slow down below speed minimum or speed up beyond speed limit
     if speed < speed-min [ set speed speed-min ]
     if speed > speed-limit [ set speed speed-limit ]
-
     fd speed
+    if ycor <= -2.5
+    [ set heading heading - 90
+    ]
+    if ycor >= 2.5
+    [ set heading heading + 90
+    ]
   ]
   set clock clock + 1
   if clock mod 30 = 0 [form-plaque]
@@ -112,14 +122,13 @@ to speed-up-car ;; turtle procedure
   set speed speed + acceleration
 end
 
-; Copyright 1997 Uri Wilensky.
-; See Info tab for full copyright and license.
+
 @#$#@#$#@
 GRAPHICS-WINDOW
-14
-251
-685
-377
+244
+10
+681
+448
 -1
 -1
 13.0
@@ -130,24 +139,39 @@ GRAPHICS-WINDOW
 1
 0
 1
-0
 1
--25
-25
--4
-4
+1
+-16
+16
+-16
+16
 1
 1
 1
 ticks
 30.0
 
-BUTTON
-36
-72
-108
-113
+SLIDER
+25
+52
+197
+85
+number-of-cars
+number-of-cars
+0
+100
+33.0
+1
+1
 NIL
+HORIZONTAL
+
+BUTTON
+18
+204
+84
+237
+setup
 setup
 NIL
 1
@@ -160,11 +184,11 @@ NIL
 1
 
 BUTTON
-119
-73
-190
-113
-NIL
+126
+205
+189
+238
+go
 go
 T
 1
@@ -174,200 +198,74 @@ NIL
 NIL
 NIL
 NIL
-0
+1
 
 SLIDER
-12
-34
-216
-67
-number-of-cars
-number-of-cars
-1
-41
-41.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-121
-180
-266
-213
+23
+105
+195
+138
 deceleration
 deceleration
 0
-.099
-0.099
-.001
+100
+50.0
+1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-121
-145
-266
-178
-acceleration
-acceleration
-0
-.0099
-0.0045
-.0001
-1
-NIL
-HORIZONTAL
-
-PLOT
-286
 20
-704
-217
-Car speeds
-time
-speed
-0.0
-300.0
-0.0
-1.1
-true
-true
-"" ""
-PENS
-"red car" 1.0 0 -2674135 true "" "plot [speed] of sample-car"
-"min speed" 1.0 0 -13345367 true "" "plot min [speed] of turtles"
-"max speed" 1.0 0 -10899396 true "" "plot max [speed] of turtles"
-
-MONITOR
-17
-145
-114
-190
-red car speed
-ifelse-value any? turtles\n  [   [speed] of sample-car  ]\n  [  0 ]
-3
+150
+192
+183
+acceleration
+acceleration
+0
+100
+54.0
 1
-11
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
 
-This model models the movement of cars on a highway. Each car follows a simple set of rules: it slows down (decelerates) if it sees a car close ahead, and speeds up (accelerates) if it doesn't see a car ahead. The model demonstrates how traffic jams can form even without any accidents, broken bridges, or overturned trucks.  No "centralized cause" is needed for a traffic jam to form.
+(a general understanding of what the model is trying to show or explain)
+
+## HOW IT WORKS
+
+(what rules the agents use to create the overall behavior of the model)
 
 ## HOW TO USE IT
 
-Click on the SETUP button to set up the cars.
-
-Set the NUMBER-OF-CARS slider to change the number of cars on the road.
-
-Click on GO to start the cars moving.  Note that they wrap around the world as they move, so the road is like a continuous loop.
-
-The ACCELERATION slider controls the rate at which cars accelerate (speed up) when there are no cars ahead.
-
-When a car sees another car right in front, it matches that car's speed and then slows down a bit more.  How much slower it goes than the car in front of it is controlled by the DECELERATION slider.
+(how to use the model, including a description of each of the items in the Interface tab)
 
 ## THINGS TO NOTICE
 
-Traffic jams can start from small "seeds."  These cars start with random positions and random speeds. If some cars are clustered together, they will move slowly, causing cars behind them to slow down, and a traffic jam forms.
-
-Even though all of the cars are moving forward, the traffic jams tend to move backwards. This behavior is common in wave phenomena: the behavior of the group is often very different from the behavior of the individuals that make up the group.
-
-The plot shows three values as the model runs:
-
-* the fastest speed of any car (this doesn't exceed the speed limit!)
-
-* the slowest speed of any car
-
-* the speed of a single car (turtle 0), painted red so it can be watched.
-
-Notice not only the maximum and minimum, but also the variability -- the "jerkiness" of one vehicle.
-
-Notice that the default settings have cars decelerating much faster than they accelerate. This is typical of traffic flow models.
-
-Even though both ACCELERATION and DECELERATION are very small, the cars can achieve high speeds as these values are added or subtracted at each tick.
+(suggested things for the user to notice while running the model)
 
 ## THINGS TO TRY
 
-In this model there are three sliders that can affect the tendency to create traffic jams: the initial NUMBER-OF-CARS, ACCELERATION, and DECELERATION.
-
-Look for patterns in how these settings affect the traffic flow.  Which variable has the greatest effect?  Do the patterns make sense?  Do they seem to be consistent with your driving experiences?
-
-Set DECELERATION to zero.  What happens to the flow?  Gradually increase DECELERATION while the model runs.  At what point does the flow "break down"?
+(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
 
 ## EXTENDING THE MODEL
 
-Try other rules for speeding up and slowing down.  Is the rule presented here realistic? Are there other rules that are more accurate or represent better driving strategies?
-
-In reality, different vehicles may follow different rules. Try giving different rules or ACCELERATION/DECELERATION values to some of the cars.  Can one bad driver mess things up?
-
-The asymmetry between acceleration and deceleration is a simplified representation of different driving habits and response times. Can you explicitly encode these into the model?
-
-What could you change to minimize the chances of traffic jams forming?
-
-What could you change to make traffic jams move forward rather than backward?
-
-Make a model of two-lane traffic.
+(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
 
 ## NETLOGO FEATURES
 
-The plot shows both global values and the value for a single car, which helps one watch overall patterns and individual behavior at the same time.
-
-The `watch` command is used to make it easier to focus on the red car.
-
-The `speed-limit` and `speed-min` variables are set to constant values. Since they are the same for every car, these variables could have been defined as globals rather than turtle variables. We have specified them as turtle variables since modifications or extensions to this model might well have every car with its own speed-limit values.
+(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
 
 ## RELATED MODELS
 
-- "Traffic Basic Utility": a version of "Traffic Basic" including a utility function for the cars.
+(models in the NetLogo Models Library and elsewhere which are of related interest)
 
-- "Traffic Basic Adaptive": a version of "Traffic Basic" where cars adapt their acceleration to try and maintain a smooth flow of traffic.
+## CREDITS AND REFERENCES
 
-- "Traffic Basic Adaptive Individuals": a version of "Traffic Basic Adaptive" where each car adapts individually, instead of all cars adapting in unison.
-
-- "Traffic 2 Lanes": a more sophisticated two-lane version of the "Traffic Basic" model.
-
-- "Traffic Intersection": a model of cars traveling through a single intersection.
-
-- "Traffic Grid": a model of traffic moving in a city grid, with stoplights at the intersections.
-
-- "Traffic Grid Goal": a version of "Traffic Grid" where the cars have goals, namely to drive to and from work.
-
-- "Gridlock HubNet": a version of "Traffic Grid" where students control traffic lights in real-time.
-
-- "Gridlock Alternate HubNet": a version of "Gridlock HubNet" where students can enter NetLogo code to plot custom metrics.
-
-## HOW TO CITE
-
-If you mention this model or the NetLogo software in a publication, we ask that you include the citations below.
-
-For the model itself:
-
-* Wilensky, U. (1997).  NetLogo Traffic Basic model.  http://ccl.northwestern.edu/netlogo/models/TrafficBasic.  Center for Connected Learning and Computer-Based Modeling, Northwestern University, Evanston, IL.
-
-Please cite the NetLogo software as:
-
-* Wilensky, U. (1999). NetLogo. http://ccl.northwestern.edu/netlogo/. Center for Connected Learning and Computer-Based Modeling, Northwestern University, Evanston, IL.
-
-## COPYRIGHT AND LICENSE
-
-Copyright 1997 Uri Wilensky.
-
-![CC BY-NC-SA 3.0](http://ccl.northwestern.edu/images/creativecommons/byncsa.png)
-
-This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 3.0 License.  To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-sa/3.0/ or send a letter to Creative Commons, 559 Nathan Abbott Way, Stanford, California 94305, USA.
-
-Commercial licenses are also available. To inquire about commercial licenses, please contact Uri Wilensky at uri@northwestern.edu.
-
-This model was created as part of the project: CONNECTED MATHEMATICS: MAKING SENSE OF COMPLEX PHENOMENA THROUGH BUILDING OBJECT-BASED PARALLEL MODELS (OBPML).  The project gratefully acknowledges the support of the National Science Foundation (Applications of Advanced Technologies Program) -- grant numbers RED #9552950 and REC #9632612.
-
-This model was developed at the MIT Media Lab using CM StarLogo.  See Resnick, M. (1994) "Turtles, Termites and Traffic Jams: Explorations in Massively Parallel Microworlds."  Cambridge, MA: MIT Press.  Adapted to StarLogoT, 1997, as part of the Connected Mathematics Project.
-
-This model was converted to NetLogo as part of the projects: PARTICIPATORY SIMULATIONS: NETWORK-BASED DESIGN FOR SYSTEMS LEARNING IN CLASSROOMS and/or INTEGRATED SIMULATION AND MODELING ENVIRONMENT. The project gratefully acknowledges the support of the National Science Foundation (REPP & ROLE programs) -- grant numbers REC #9814682 and REC-0126227. Converted from StarLogoT to NetLogo, 2001.
-
-<!-- 1997 2001 MIT -->
+(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
 @#$#@#$#@
 default
 true
@@ -561,6 +459,22 @@ Polygon -7500403 true true 135 105 90 60 45 45 75 105 135 135
 Polygon -7500403 true true 165 105 165 135 225 105 255 45 210 60
 Polygon -7500403 true true 135 90 120 45 150 15 180 45 165 90
 
+sheep
+false
+15
+Circle -1 true true 203 65 88
+Circle -1 true true 70 65 162
+Circle -1 true true 150 105 120
+Polygon -7500403 true false 218 120 240 165 255 165 278 120
+Circle -7500403 true false 214 72 67
+Rectangle -1 true true 164 223 179 298
+Polygon -1 true true 45 285 30 285 30 240 15 195 45 210
+Circle -1 true true 3 83 150
+Rectangle -1 true true 65 221 80 296
+Polygon -1 true true 195 285 210 285 210 240 240 210 195 210
+Polygon -7500403 true false 276 85 285 105 302 99 294 83
+Polygon -7500403 true false 219 85 210 105 193 99 201 83
+
 square
 false
 0
@@ -645,6 +559,13 @@ Line -7500403 true 40 84 269 221
 Line -7500403 true 40 216 269 79
 Line -7500403 true 84 40 221 269
 
+wolf
+false
+0
+Polygon -16777216 true false 253 133 245 131 245 133
+Polygon -7500403 true true 2 194 13 197 30 191 38 193 38 205 20 226 20 257 27 265 38 266 40 260 31 253 31 230 60 206 68 198 75 209 66 228 65 243 82 261 84 268 100 267 103 261 77 239 79 231 100 207 98 196 119 201 143 202 160 195 166 210 172 213 173 238 167 251 160 248 154 265 169 264 178 247 186 240 198 260 200 271 217 271 219 262 207 258 195 230 192 198 210 184 227 164 242 144 259 145 284 151 277 141 293 140 299 134 297 127 273 119 270 105
+Polygon -7500403 true true -1 195 14 180 36 166 40 153 53 140 82 131 134 133 159 126 188 115 227 108 236 102 238 98 268 86 269 92 281 87 269 103 269 113
+
 x
 false
 0
@@ -653,8 +574,6 @@ Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
 NetLogo 6.2.2
 @#$#@#$#@
-setup
-repeat 180 [ go ]
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
@@ -670,5 +589,5 @@ true
 Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
 @#$#@#$#@
-1
+0
 @#$#@#$#@
